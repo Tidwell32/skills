@@ -1,0 +1,7 @@
+{
+  "name": "z-map",
+  "description": "Maintains a compact, in-repo, incrementally refreshable codebase map so a cold session gets oriented in seconds and navigates to the right file:line on demand. A SessionStart hook injects the map's orientation and flags staleness; the skill generates and incrementally refreshes the map.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}

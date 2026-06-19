@@ -1,0 +1,7 @@
+{
+  "name": "z-commit",
+  "description": "Turns a finished working tree into clean, atomic, well-described commits you review and run yourself — proposes groupings and messages, flags what shouldn't ship, and never stages or commits for you.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}

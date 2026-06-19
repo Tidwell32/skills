@@ -1,0 +1,7 @@
+{
+  "name": "z-log",
+  "description": "A lean, in-repo episodic memory: a curated log of decisions, gotchas, and open threads so the next session recalls the why, not just the what. Model-authored on demand (no per-tool capture); a SessionStart hook injects the bounded digest and nudges when work has happened since the last entry.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}

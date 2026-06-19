@@ -1,0 +1,7 @@
+{
+  "name": "z-learn",
+  "description": "Turns coding sessions into guided learning — builds, refactors, and debugs incrementally while narrating the reasoning, calibrated to what you already know.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}

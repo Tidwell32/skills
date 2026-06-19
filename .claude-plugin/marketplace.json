@@ -1,0 +1,46 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "z-skills",
+  "description": "Zack's personal collection of custom skills for Claude Code.",
+  "owner": {
+    "name": "Zack Tidwell"
+  },
+  "plugins": [
+    {
+      "name": "z-learn",
+      "description": "Turns coding sessions into guided learning — builds, refactors, and debugs incrementally while narrating the reasoning, calibrated to what you already know.",
+      "source": "./plugins/z-learn",
+      "category": "development"
+    },
+    {
+      "name": "z-build",
+      "description": "A streamlined explore→plan→implement→test→review loop with a live visual companion for ideation. Does what gsd/superpowers do for a coding task, but leans on Opus's native planning and in-context execution instead of heavy subagent pipelines and on-disk scaffolding. Keeps the disciplines an LLM skips; drops the ceremony.",
+      "source": "./plugins/z-build",
+      "category": "development"
+    },
+    {
+      "name": "z-map",
+      "description": "Maintains a compact, in-repo, incrementally refreshable codebase map so a cold session gets oriented in seconds and navigates to the right file:line on demand. A SessionStart hook injects the map's orientation and flags staleness; the skill generates and incrementally refreshes the map.",
+      "source": "./plugins/z-map",
+      "category": "development"
+    },
+    {
+      "name": "z-log",
+      "description": "A lean, in-repo episodic memory: a curated log of decisions, gotchas, and open threads so the next session recalls the why, not just the what. Model-authored on demand (no per-tool capture); a SessionStart hook injects the bounded digest and nudges when work has happened since the last entry.",
+      "source": "./plugins/z-log",
+      "category": "development"
+    },
+    {
+      "name": "z-commit",
+      "description": "Turns a finished working tree into clean, atomic, well-described commits you review and run yourself — proposes groupings and messages, flags what shouldn't ship, and never stages or commits for you.",
+      "source": "./plugins/z-commit",
+      "category": "development"
+    },
+    {
+      "name": "z-upgrade",
+      "description": "A disciplined dependency, framework, runtime, or toolchain upgrade: read the migration notes, inventory usage, upgrade one layer at a time, verify runtime behavior (not just compilation), and record deferred deprecations. Never blindly bumps versions.",
+      "source": "./plugins/z-upgrade",
+      "category": "development"
+    }
+  ]
+}

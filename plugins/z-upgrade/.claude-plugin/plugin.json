@@ -1,0 +1,7 @@
+{
+  "name": "z-upgrade",
+  "description": "A disciplined dependency, framework, runtime, or toolchain upgrade: read the migration notes, inventory usage, upgrade one layer at a time, verify runtime behavior (not just compilation), and record deferred deprecations. Never blindly bumps versions.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}

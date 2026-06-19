@@ -1,0 +1,7 @@
+{
+  "name": "z-build",
+  "description": "A streamlined explore→plan→implement→test→review loop with a live visual companion for ideation. Does what gsd/superpowers do for a coding task, but leans on Opus's native planning and in-context execution instead of heavy subagent pipelines and on-disk scaffolding. Keeps the disciplines an LLM skips; drops the ceremony.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}
