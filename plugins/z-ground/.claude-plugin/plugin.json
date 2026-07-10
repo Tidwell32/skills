@@ -1,0 +1,7 @@
+{
+  "name": "z-ground",
+  "description": "Ground-truth API verification: pin the installed version, read the actual surface (types, source, --help), follow the repo's existing call sites, and probe with a throwaway script when still unsure. Never code from memory against a version-sensitive API — memory of an API is a hypothesis, not a fact.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}

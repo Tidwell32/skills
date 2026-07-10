@@ -37,6 +37,18 @@
       "category": "development"
     },
     {
+      "name": "z-ground",
+      "description": "Ground-truth API verification: pin the installed version, read the actual surface (types, source, --help), follow the repo's existing call sites, and probe with a throwaway script when still unsure. Never code from memory against a version-sensitive API — memory of an API is a hypothesis, not a fact.",
+      "source": "./plugins/z-ground",
+      "category": "development"
+    },
+    {
+      "name": "z-subagent",
+      "description": "Delegation discipline for subagents: decide when to delegate vs. read it yourself, then dispatch with a real contract — one goal, a scope fence, an exact return shape, a hard size cap, and file:line grounding with confidence tags — so agents return compact, verifiable results instead of dumps.",
+      "source": "./plugins/z-subagent",
+      "category": "development"
+    },
+    {
       "name": "z-upgrade",
       "description": "A disciplined dependency, framework, runtime, or toolchain upgrade: read the migration notes, inventory usage, upgrade one layer at a time, verify runtime behavior (not just compilation), and record deferred deprecations. Never blindly bumps versions.",
       "source": "./plugins/z-upgrade",

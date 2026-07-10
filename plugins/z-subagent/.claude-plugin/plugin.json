@@ -1,0 +1,7 @@
+{
+  "name": "z-subagent",
+  "description": "Delegation discipline for subagents: decide when to delegate vs. read it yourself, then dispatch with a real contract — one goal, a scope fence, an exact return shape, a hard size cap, and file:line grounding with confidence tags — so agents return compact, verifiable results instead of dumps.",
+  "author": {
+    "name": "Zack Tidwell"
+  }
+}

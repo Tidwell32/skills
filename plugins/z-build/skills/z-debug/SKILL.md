@@ -25,7 +25,7 @@ digraph debug {
 1. **Reproduce reliably.** Find the smallest input/steps that trigger it. If you can, capture it as a **failing test** (see `z-tdd`) — now the reproduction is automated and the fix has a gate.
 2. **Observe before theorizing.** Read the *actual* error, stack trace, and output. Add logging or inspect state at the failure point. Look at what is, not what you assume.
 3. **One hypothesis.** State a specific, falsifiable cause: "X is null because Y returns early when Z." Vague hunches aren't testable.
-4. **Test the hypothesis with one change** — the cheapest experiment that confirms or refutes it (a log line, a value check, `git bisect`, commenting one path). One variable at a time, so the result means something.
+4. **Test the hypothesis with one change** — the cheapest experiment that confirms or refutes it (a log line, a value check, `git bisect`, commenting one path). Say what result you expect **before** running it — an experiment whose outcome you can't predict discriminates nothing. One variable at a time, so the result means something.
 5. **Fix the root cause, then verify** against the reproduction (green test / clean run, shown as evidence). Remove debug instrumentation. Confirm you didn't just move the symptom.
 
 ## When Stuck
@@ -38,5 +38,6 @@ Two or three failed hypotheses means stop guessing and widen the net: shrink to 
 - **Changing several things at once** — you won't know which mattered. One variable per test.
 - **Patching the symptom** — null-check that hides why it was null. Trace to the cause.
 - **Guessing repeatedly** — after a couple of misses, get more evidence (bisect, minimal repro), don't escalate the guessing.
+- **Re-applying a fix that already failed** — a failed fix is a refuted hypothesis; retrying it unchanged is evidence ignored, not persistence.
 - **Fixing without a reproduction** — if you can't reproduce it, you can't prove you fixed it.
 - **Leaving debug logs behind** — clean up the instrumentation once it's solved.

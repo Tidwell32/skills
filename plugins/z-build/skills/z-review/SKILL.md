@@ -13,7 +13,7 @@ Get a genuine fresh-eyes pass on the finished diff, then triage what comes back.
 
 ## Run the Review
 
-Dispatch **one** fresh subagent (general-purpose, with file-reading and shell access) using the prompt in [reviewer-prompt.md](reviewer-prompt.md). It assembles the full change itself — committed, staged, unstaged, and untracked, since z-build leaves work uncommitted — reads the changed files for context, and returns findings classified by severity: correctness/security bugs first, then reuse/simplification/efficiency.
+Dispatch **one** fresh subagent (general-purpose, with file-reading and shell access) using the prompt in [reviewer-prompt.md](reviewer-prompt.md). It assembles the full change itself — committed, staged, unstaged, and untracked, since z-build leaves work uncommitted — reads the changed files for context, and returns findings classified by severity — correctness/security bugs first, then reuse/simplification/efficiency — each tagged **CONFIRMED** (traced) or **PLAUSIBLE** (suspected).
 
 One subagent, one pass. Don't fan out multiple reviewers for an ordinary change.
 
@@ -23,7 +23,7 @@ One subagent, one pass. Don't fan out multiple reviewers for an ordinary change.
 
 Findings are input, not orders. For each one:
 
-1. **Verify it against the code.** Confirm the issue is real and the reviewer understood the context. Fresh-context reviewers miss intent and invent problems that aren't there.
+1. **Verify it against the code.** Confirm the issue is real and the reviewer understood the context. Fresh-context reviewers miss intent and invent problems that aren't there. Budget effort by the confidence tag: spot-check a **CONFIRMED** finding; treat a **PLAUSIBLE** one as a hypothesis to verify from scratch.
 2. **Decide.** Real → fix it. Wrong or not worth it → say so, with the evidence for why. Don't implement a change you can't justify just because a reviewer suggested it.
 3. **Fix the real ones one at a time**, then re-run the tests (the TEST iron law still holds: show real output).
 
@@ -32,6 +32,8 @@ Push back when the reviewer is wrong — performative agreement produces worse c
 ## Hand Off
 
 When findings are resolved and tests are green, stop. **Do not stage, commit, or push** — hand the clean working tree back for the user to review and commit.
+
+Quality cleanups beyond bug-hunting (reuse, dead weight, altitude) are `z-simplify`'s job — run it after this pass if the diff grew past its task.
 
 ## Common Mistakes
 

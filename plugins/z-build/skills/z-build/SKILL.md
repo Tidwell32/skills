@@ -11,7 +11,7 @@ A streamlined **explore → plan → implement → test → review** loop. It ke
 
 **Core principle: keep the gates, drop the scaffolding.** Heavy workflows replace your judgment with subagent pipelines and on-disk artifacts. You don't need them — you reason the plan through directly, hold the task in context, and track state in the todo list. The only things that need enforcing are the disciplines: explore before committing, align before coding, prove it works, get fresh eyes, and leave the commit to the user.
 
-**State is ephemeral** — the todo list and this conversation. No `PLAN.md`, `RESEARCH.md`, `CONTEXT.md`, or `.planning/` files. **The skill never stages or commits** (see Hand Off).
+**State is ephemeral** — the todo list and this conversation. No `PLAN.md`, `RESEARCH.md`, `CONTEXT.md`, or `.planning/` files. If the session compacts mid-loop, re-anchor before continuing: restate the approach and where you are in the todos from the summary, rather than improvising from memory. **The skill never stages or commits** (see Hand Off).
 
 ## When to Use
 
@@ -46,12 +46,12 @@ For net-new, ambiguous, or design/UX-shaped work where the approach isn't obviou
 Think hard about the approach, reuse what already exists, and produce a short approach statement + a todo list. **Gate:** for non-trivial work, confirm the approach with the user before writing code. Skip the gate only when the task is small and unambiguous.
 
 ### 2. IMPLEMENT
-Work the todos one at a time, keeping the list current. Reuse existing patterns and utilities — match the surrounding code. **No staging, no commits.**
+Work the todos one at a time, keeping the list current. Reuse existing patterns and utilities — match the surrounding code. Stay on task: an unrelated improvement you notice becomes a todo or a hand-off note, never a change in this diff. **No staging, no commits.**
 
 For behavior that's risky or easy to get subtly wrong, and for **every bug fix**, use **`z-tdd`** — write the test and watch it fail first. For trivial/obvious code, skip the ceremony but still verify (the TEST iron law always holds).
 
 ### 3. TEST
-Run the tests / the app and **show the real output.**
+Run the tests / the app and **show the real output.** Prefer end-to-end evidence: drive the actual flow the change touches (run the app, hit the endpoint, exercise the CLI) — unit tests alone can pass while the feature doesn't work.
 
 **Iron law: no "done" without fresh verification evidence.** Never say it works, passes, or is fixed based on "should." Run the command, see the result, then claim — with the output as proof.
 
@@ -61,6 +61,8 @@ If something fails or behaves unexpectedly, **invoke `z-debug`** (systematic hyp
 **REQUIRED SUB-SKILL:** invoke `z-review` (mandatory — every loop ends here).
 
 It dispatches one fresh-context subagent over the diff, then you triage findings with rigor: verify each against the code, fix the real ones one at a time, push back on the wrong ones with evidence. After fixes, re-run TEST.
+
+If the diff grew past its task, follow with **`z-simplify`** — the optional quality pass (reuse, dead weight, altitude). Review hunts bugs; simplify hunts excess.
 
 ## Teaching companion — combine with `z-learn`
 
@@ -74,7 +76,7 @@ When the user signals they want to learn while the work happens — "teach me as
 
 ## Hand Off (never commit)
 
-When review is clean and verification passes, **stop with the changes in the working tree.** Summarize what changed, the verification evidence, and any remaining limitations.
+When review is clean and verification passes, **stop with the changes in the working tree.** Summarize what changed, the verification evidence, and any remaining limitations — written for someone who didn't watch the work happen, with no mid-task shorthand or codenames.
 
 If the user wants help preparing commits, invoke `z-commit` when available. Otherwise briefly suggest logical commit groupings when useful. **Never stage, commit, or push** — the user reviews and commits.
 

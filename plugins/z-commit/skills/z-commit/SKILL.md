@@ -29,6 +29,7 @@ Turn a finished working tree into a set of clean, atomic, well-described commits
 ## Grouping Heuristics
 
 - **One concern per commit** — a feature, a fix, a refactor; not a grab-bag.
+- **A mixed-concern file splits by hunk** — when one file carries two concerns, the file isn't the atom, the hunk is: propose `git add -p` and say which hunks belong to which commit.
 - **Separate refactor from behavior change** — a rename/move apart from the logic change, so each is reviewable and revertable on its own.
 - **Don't mix formatting with logic** — pure reformatting/whitespace is its own commit.
 - **Tests travel with the code they cover** — same commit or immediately after, not somewhere unrelated.

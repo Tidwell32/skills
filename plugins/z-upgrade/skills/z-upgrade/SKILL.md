@@ -25,7 +25,7 @@ Treat an upgrade as a **controlled migration, not a version bump.** Read what ch
 3. **Identify the breaking changes that actually hit you.** Intersect the notes with your inventory; ignore changes to APIs you don't touch.
 4. **Upgrade one layer at a time.** One package, one major step. Don't jump two majors at once or bump the whole tree together — you won't know what broke what.
 5. **Build and test after each step.** Get back to green before moving on. A failing step is information; don't pile the next change on top of it.
-6. **Migrate deprecated APIs.** Update the call sites the new version flags, as part of the upgrade.
+6. **Migrate deprecated APIs.** Update the call sites the new version flags, as part of the upgrade. Prefer the project's **official codemods** when they exist (React, Next.js, ESLint, …): run them on a clean tree so the codemod's diff reviews on its own, then hand-fix what it missed.
 7. **Inspect the lockfile.** Review the transitive changes the bump pulled in — the lockfile diff is part of the change, and an unexpected transitive jump is a red flag.
 
 ## Hard Rules

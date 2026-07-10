@@ -31,6 +31,10 @@ digraph tdd { rankdir=LR;
 
 For a bug: the failing test must **reproduce the bug** first. A fix isn't verified until that red test goes green.
 
+## Writing the Tests Themselves
+
+**REQUIRED: read [test-quality.md](test-quality.md)** whenever you write or extend tests. It covers both sides: quality (behavior over implementation, mock the boundary not the subject, the tautology check) and **economy** (one test per distinct behavior, tables over copy-paste, suite size scales with branchiness — not feature size). More tests is not the goal; tests that each uniquely catch a real failure is.
+
 ## Rationalizations — STOP
 
 | Excuse | Reality |

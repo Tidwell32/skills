@@ -5,7 +5,7 @@ Goal: record the reasoning a future cold session couldn't reconstruct from the c
 ## When to capture
 
 - **Decision** — you chose among real alternatives and the choice isn't self-evident from the result (a library, a data model, where state lives, an approach rejected).
-- **Gotcha / landmine** — something that looks wrong or removable but is intentional; the kind of thing a future you would "fix" and regret.
+- **Gotcha / landmine** — something that looks wrong or removable but is intentional; the kind of thing a future you would "fix" and regret. This includes **corrections**: the user overruled an approach or explained why the obvious fix is wrong — capture the why so no future session re-attempts it.
 - **Open thread** — you're pausing mid-task; record where it stands and the next step so the next session resumes cleanly.
 
 If git, the PR description, or `z-map` already says it, **don't** duplicate it here.
