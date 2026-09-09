@@ -13,7 +13,10 @@ Maintains a **compact, in-repo, version-controlled map** of the codebase so a co
 
 This plays to what an LLM is already good at — reading on demand, grep/glob navigation, native Mermaid/markdown, parallel sub-agent fan-out — rather than trying to hold a whole repo in context.
 
+The map records contracts, not lore. Non-obvious behavioral claims should be grounded in source pointers; important intentional behavior may also point to a representative test. Source remains authoritative if it conflicts with the map.
+
 **Two artifacts, committed to the repo:**
+
 - `.z/map/map.md` — human-facing. Orientation, territory tree, Mermaid diagrams, key-files index, conventions.
 - `.z/map/meta.json` — machine state: `built_against_sha`, `generated_at`, `section_index` (globs → section), thresholds.
 
@@ -44,17 +47,20 @@ digraph codemap {
 
 **Status first.** Check for `.z/map/meta.json`. None → `generate`. Present → compare `built_against_sha` to `git rev-parse HEAD`; behind → `refresh`; equal → report fresh, stop.
 
-**The map tracks committed state.** Freshness is defined purely as `built_against_sha` vs `HEAD` — both the status check above and the session-start hook compare commits only. Uncommitted working-tree changes are *not* part of the freshness contract: a map can read "fresh" while the working tree has local edits, and that's intended (those edits aren't in the repo yet). `refresh` can optionally fold in working-tree changes on request (see `refreshing.md`), but doing so doesn't change what "fresh" means — only the next commit's `built_against_sha` does.
+**The map tracks committed state.** Freshness is defined purely as `built_against_sha` vs `HEAD` — both the status check above and the session-start hook compare commits only. Uncommitted working-tree changes are _not_ part of the freshness contract: a map can read "fresh" while the working tree has local edits, and that's intended (those edits aren't in the repo yet). `refresh` can optionally fold in working-tree changes on request (see `refreshing.md`), but doing so doesn't change what "fresh" means — only the next commit's `built_against_sha` does.
 
 ### generate (first build)
+
 **REQUIRED: read `generating.md`** and follow it. In short: survey the top-level structure with cheap signals, fan out parallel sub-agents that return **compact summaries (never file contents)**, aggregate into the five `.z/map/map.md` sections, draw the Mermaid diagrams with `file:path`-labeled nodes, and write `.z/map/meta.json` with `built_against_sha = HEAD`. Enforce the size budget.
 
 ### refresh (incremental)
+
 **REQUIRED: read `refreshing.md`** and follow it. In short: diff against `built_against_sha`, map changed files to sections via `section_index`, regenerate **only** the affected sections (re-fan-out only on structural change), prune deletions, and update `built_against_sha`/`generated_at`. Keep the diff on `.z/map/map.md` minimal so it reviews cleanly.
 
 ## Artifact Spec
 
 `.z/map/map.md`, in order:
+
 1. **Orientation** — a `## Orientation` section, its body wrapped in `<!--orientation-->` … `<!--/orientation-->` markers (the hook injects exactly that block; the heading lets `section_index` key it). What the project is, stack, entry points, how to run/test. Keep ≤ ~40 lines.
 2. **Territory** — annotated directory/module tree, one line of purpose each.
 3. **Diagrams** — inline Mermaid: a module-dependency graph + the 1–3 most important flows; every node labeled with a `file:path`.
@@ -65,13 +71,13 @@ digraph codemap {
 
 ## Live Controls
 
-| User says | You do |
-|-----------|--------|
-| `codemap` / "is the map current?" | Run **status**: report fresh / stale (N commits, M files) / missing |
-| "generate" / "map this codebase" | Follow `generating.md` to build from scratch |
-| "refresh" / "update the map" | Follow `refreshing.md` to update changed sections |
-| "refresh `<path>`" | Force-regenerate just that subtree's sections |
-| "open `<topic>`" | Use the key-files index to jump straight to the relevant `file:line` |
+| User says                         | You do                                                               |
+| --------------------------------- | -------------------------------------------------------------------- |
+| `codemap` / "is the map current?" | Run **status**: report fresh / stale (N commits, M files) / missing  |
+| "generate" / "map this codebase"  | Follow `generating.md` to build from scratch                         |
+| "refresh" / "update the map"      | Follow `refreshing.md` to update changed sections                    |
+| "refresh `<path>`"                | Force-regenerate just that subtree's sections                        |
+| "open `<topic>`"                  | Use the key-files index to jump straight to the relevant `file:line` |
 
 ## Common Mistakes
 
@@ -81,3 +87,4 @@ digraph codemap {
 - **Letting it rot silently** — if the diff is large, refresh before relying on the map; a stale map is worse than none.
 - **Committing it for the user** — write the files, summarize, hand off. The user commits.
 - **Unlabeled diagram nodes** — every Mermaid node must carry a `file:path` so it's navigable, not decorative.
+- **Fresh SHA, stale truth** — advancing built_against_sha without revalidating map claims/pointers affected by the changed files. A map can be metadata-fresh while semantically stale; changed referenced files invalidate their mapped claims.

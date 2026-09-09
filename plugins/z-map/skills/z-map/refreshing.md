@@ -17,10 +17,12 @@ Goal: bring the map back in sync with the code at **cost proportional to the dif
 - **Resolve** each changed path to its owning section(s) via `section_index` (glob match). Keys are the map's `##` headings, so a match names the exact heading(s) to regenerate. Repo-wide sections (Territory, Diagrams, Key-files index, Conventions) match `**/*`, so they're always candidates — but within them you still touch only the affected rows/nodes (Step 3a), not the whole section.
 - **Incremental** when: changed-file count ≤ `incremental_max_files` AND no structural shift — no top-level dir added/removed, no entry point moved/renamed, no manifest/dependency overhaul.
 - **Structural** otherwise (large diff, new/removed module, moved entry points, build system change).
+- **Pointer invalidation** independently of section_index, search the existing map for every changed/renamed/deleted path. Any section that contains a pointer to a changed file is affected and must have those pointers/claims revalidated. A changed file can invalidate a map claim even when the section’s configured glob would not otherwise select it.
 
 ## Step 3a — Incremental update
 
 For each affected section:
+
 - Re-derive just that section from the changed files. Read only the changed files (or a focused area), not the whole repo.
 - **Modified** files → update their key-files-index rows and any area summary they belong to.
 - **Added** files → add a key-files-index row / territory line **only if significant** (new public surface, new module). Skip trivial additions.
@@ -37,6 +39,7 @@ Re-fan-out (per `generating.md` Step 2) for the areas that changed structurally,
 - Set `built_against_sha` to the current `git rev-parse HEAD` and refresh `generated_at`.
 - Add/adjust `section_index` entries if modules were added/removed/renamed, keeping every key matching a `##` heading in the map.
 - Re-check the size budget (≤ ~1500 lines); compress if the update pushed it over.
+- Re-run pointer validation for all sections touched by the refresh.
 - Report which sections changed and the new build sha. **Do not commit** — the user reviews the `.z/map/map.md` diff and commits.
 
 ## Checklist

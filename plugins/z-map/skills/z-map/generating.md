@@ -20,13 +20,16 @@ Get the shape of the repo without reading file bodies:
 Dispatch parallel sub-agents (Explore / general-purpose), **one per major area**. Give each a strict contract:
 
 > Map `<area>`. Return ONLY (no file contents, ≤ ~25 lines):
+>
 > - One-line purpose of the area.
-> - Public surface / entry points (exported APIs, routes, CLI commands, main functions) with `file:line`.
-> - Key internal files and what each owns, one line each, with `file:line`.
-> - Inbound/outbound dependencies on other areas (names only).
-> - Any non-obvious invariant, gotcha, or convention.
+> - Public surface / entry points with `file:line`.
+> - Key internal files and what each owns, with `file:line`.
+> - Inbound/outbound dependencies on other areas.
+> - Cross-boundary contracts / manually synchronized surfaces, with `file:line`.
+> - Non-obvious invariants, intentional behaviors, gotchas, or conventions, each grounded in at least one `file:line`.
+> - Up to 1–3 verification anchors (tests/examples) for important non-obvious behavior, when useful.
 
-The point of delegation is to keep raw bytes out of *your* context — collect summaries, not dumps. For a small repo you may skip fan-out and survey directly: read the manifests, entry points, and the files you're summarizing, but still emit summaries and `file:line` pointers, not transcriptions.
+The point of delegation is to keep raw bytes out of _your_ context — collect summaries, not dumps. For a small repo you may skip fan-out and survey directly: read the manifests, entry points, and the files you're summarizing, but still emit summaries and `file:line` pointers, not transcriptions.
 
 ## Step 3 — Aggregate into `.z/map/map.md`
 
@@ -35,11 +38,14 @@ Assemble the five sections in order:
 1. **Orientation** — a `## Orientation` section whose body is wrapped in `<!--orientation-->` … `<!--/orientation-->`. The markers let the hook inject exactly this block every session; the `##` heading lets `section_index` key it like every other section (keep the markers inside the section). What the project is, the stack, the entry points, how to run and test. **Include only the fields that apply** — a library, content, or config repo may have no run/server/build command, so drop those fields rather than inventing them (use "Entry points" for its main modules, package, or manifest). Make it dense and ≤ ~40 lines:
    ```markdown
    ## Orientation
+
    <!--orientation-->
+
    **What:** <one-paragraph elevator pitch>
    **Stack:** <languages / frameworks / runtime>
    **Entry points:** `path/to/main` (cli), `path/to/server` (http) …
-   **Run:** `<command>`  ·  **Test:** `<command>`  ·  **Build:** `<command>`
+   **Run:** `<command>` · **Test:** `<command>` · **Build:** `<command>`
+
    <!--/orientation-->
    ```
 2. **Territory** — annotated tree of meaningful dirs/modules, one line of purpose each. Omit noise (node_modules, build output, vendored deps).
@@ -57,6 +63,17 @@ Assemble the five sections in order:
 
 **Size budget:** orientation ≤ ~40 lines; whole file ≤ ~1500 lines. Over budget → compress (more `file:line` pointers, fewer prose words). Never expand toward mirroring the code.
 
+## Step 3.5 — Validate the map
+
+Before writing meta state:
+
+- Verify every `file:line` pointer resolves to a tracked file and a valid line.
+- Verify every Mermaid node's file path exists.
+- Verify every key-files row still points at the responsibility it claims.
+- For non-obvious invariants/intentional behaviors, confirm the claim against
+  source rather than inherited documentation.
+- If a map claim conflicts with source, source wins; update or remove the claim.
+
 ## Step 4 — Write `.z/map/meta.json`
 
 ```json
@@ -66,7 +83,14 @@ Assemble the five sections in order:
   "generated_at": "<UTC ISO 8601, e.g. output of: date -u +%Y-%m-%dT%H:%M:%SZ>",
   "thresholds": { "incremental_max_files": 25 },
   "section_index": {
-    "Orientation": ["**/package.json", "**/pyproject.toml", "**/go.mod", "Makefile", "**/*.toml", "README*"],
+    "Orientation": [
+      "**/package.json",
+      "**/pyproject.toml",
+      "**/go.mod",
+      "Makefile",
+      "**/*.toml",
+      "README*"
+    ],
     "Territory": ["**/*"],
     "Diagrams": ["**/*"],
     "Key-files index": ["**/*"],
