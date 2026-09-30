@@ -27,6 +27,10 @@ How to delegate to subagents so the results are worth their tokens. A subagent's
 
 For findings-shaped work (reviews, audits, bug hunts), add the **refute-pass**: instruct the agent to try to kill each of its own findings before reporting and return only the survivors. Every false positive costs you a verification pass.
 
+## Start Them Oriented
+
+A subagent starts cold: nothing injected at session start reaches it. With `z-map` / `z-log` installed, a SubagentStart hook gives it the map's orientation and the worklog's gotchas — but not the rest of the map, and not what you've learned this session. So put the starting point in the scope fence: the map section or key files that bound the task (`.z/map/map.md` → "Key-files index", `src/billing/`), and any gotcha you already know applies. An agent told where to start reads a few files; one told nothing re-explores the tree and pays for it in your tokens and its accuracy.
+
 ## Fan-Out
 
 - **One agent per independent axis** — per module, per question, per review dimension. Not N agents on the same question hoping volume becomes coverage. (The exception is adversarial verification, where independent votes on the same claim are the point.)
@@ -40,7 +44,7 @@ Treat what comes back as **input, not truth**: verify before acting, the same wa
 ## Worked Examples in This Suite
 
 - `z-review`'s `reviewer-prompt.md` — a findings contract: severity classes, confidence tags, refute-pass, bounded report.
-- `z-map`'s `generating.md` Step 2 — a research contract: ≤ ~25 lines, no file contents, `file:line` pointers only.
+- `z-map`'s `generating.md` Step 2 — a research contract: ≤ ~25 lines, no file contents, `file:line` + symbol pointers only.
 
 Copy their skeletons; change the task.
 
@@ -49,6 +53,7 @@ Copy their skeletons; change the task.
 - **Delegating a one-lookup question** — the round-trip costs more than the read.
 - **"Look into X and report back"** — no shape, no cap → a dump. Specify the return before the task.
 - **No scope fence** — unbounded wandering, opinions about code that wasn't in question.
+- **No starting point** — the agent rediscovers structure the map already records.
 - **Accepting ungrounded claims** — no `file:line` means unverifiable, which means re-doing the work yourself.
 - **Serial dispatch of independent work** — batch the launches in one go.
 - **Fan-out as volume** — more agents on the same question adds noise, not coverage (adversarial votes excepted).

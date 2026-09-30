@@ -1,23 +1,31 @@
 #!/usr/bin/env node
-// SessionStart hook for the z-map plugin.
+// SessionStart + SubagentStart hook for the z-map plugin.
 //
 // Reads the in-repo codebase map (if present) and injects its Orientation block
-// plus a one-line staleness verdict into the new session's context. It is cheap,
-// silent when no map exists, and never throws in a way that disrupts the session.
+// plus a one-line staleness verdict. SubagentStart matters because subagents
+// never see SessionStart context — without it they re-explore from scratch.
+// Cheap, silent when no map exists, and never throws in a way that disrupts
+// the session.
 //
-// Output contract: a SessionStart hook may return JSON with
-//   hookSpecificOutput.additionalContext  -> appended to the session context.
+// Staleness is measured against the default branch, not HEAD: worktrees and
+// feature branches share one .z/ but sit at different commits, and the map
+// describes merged code.
+//
+// Output contract: a SessionStart/SubagentStart hook may return JSON with
+//   hookSpecificOutput.additionalContext  -> appended to the context.
 // On any error or when there is nothing to say, it emits a no-op envelope.
 
 import { readFileSync, existsSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
-function emit(additionalContext) {
+const DEFAULT_STALE_COMMITS = 20;
+
+function emit(event, additionalContext) {
   const out = { continue: true, suppressOutput: true };
   if (additionalContext) {
     out.hookSpecificOutput = {
-      hookEventName: "SessionStart",
+      hookEventName: event,
       additionalContext,
     };
   }
@@ -41,6 +49,73 @@ function gitDirMarker(cwd, name) {
   }
 }
 
+// The ref the map is measured against: meta.base_ref, else origin's default
+// branch, else a local main/master, else HEAD.
+function resolveBaseRef(root, configured) {
+  const candidates = [];
+  if (configured) candidates.push(configured);
+  try {
+    candidates.push(git(root, ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"]));
+  } catch {
+    /* no origin/HEAD */
+  }
+  candidates.push("origin/main", "origin/master", "main", "master");
+  for (const ref of candidates) {
+    try {
+      git(root, ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`]);
+      return ref;
+    } catch {
+      /* try the next candidate */
+    }
+  }
+  return "HEAD";
+}
+
+function stalenessVerdict(root, meta) {
+  const builtSha = meta.built_against_sha;
+  if (!builtSha) {
+    return "Map has no recorded build SHA — run `z-map refresh`.";
+  }
+  const short = builtSha.slice(0, 8);
+  const base = resolveBaseRef(root, meta.base_ref);
+  const threshold =
+    Number(meta.thresholds && meta.thresholds.stale_commits) || DEFAULT_STALE_COMMITS;
+
+  try {
+    git(root, ["cat-file", "-e", `${builtSha}^{commit}`]);
+  } catch {
+    return `Map was built against ${short}, no longer in history (rebased?) — run \`z-map refresh\`.`;
+  }
+  try {
+    git(root, ["merge-base", "--is-ancestor", builtSha, base]);
+  } catch {
+    return `Map was built from ${short}, which is not on ${base} — run \`z-map refresh\` against ${base}.`;
+  }
+
+  let commits;
+  try {
+    commits = Number(git(root, ["rev-list", "--count", `${builtSha}..${base}`]));
+  } catch {
+    return "Git unavailable — map staleness unknown.";
+  }
+  if (commits === 0) return `Map is current with ${base}.`;
+  if (commits <= threshold) {
+    return `Map is ${commits} commit(s) behind ${base} (within the ${threshold}-commit refresh threshold).`;
+  }
+
+  let files = "?";
+  try {
+    files = String(
+      git(root, ["diff", "--name-only", `${builtSha}..${base}`])
+        .split("\n")
+        .filter(Boolean).length,
+    );
+  } catch {
+    /* ignore */
+  }
+  return `Map is STALE: ${commits} commits / ${files} files behind ${base} (built @ ${short}). Verify its claims against source, and run \`z-map refresh\` (a \`z-log\` curate pass does this) before relying on it.`;
+}
+
 function main() {
   // --- hook input (best effort) ---
   let input = {};
@@ -49,6 +124,8 @@ function main() {
   } catch {
     /* no stdin / not JSON */
   }
+  const event = input.hook_event_name || "SessionStart";
+  const isSubagent = event === "SubagentStart";
   const cwd = input.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd();
   const source = input.source || "startup";
 
@@ -74,9 +151,10 @@ function main() {
     /* no map */
   }
 
-  // --- no map: hint once per repo, only at real startup inside a git repo ---
+  // --- no map: hint once per repo, only at real startup of a main session ---
   if (!meta || mapText === null) {
     if (
+      !isSubagent &&
       source === "startup" &&
       process.env.CODEMAP_HINT !== "off" &&
       meta === null &&
@@ -93,7 +171,7 @@ function main() {
         // already nudged here, so opening the repo daily doesn't nag.
         const marker = gitDirMarker(cwd, "codemap-hint-shown");
         if (marker && existsSync(marker)) {
-          emit(null);
+          emit(event, null);
           return;
         }
         if (marker) {
@@ -104,12 +182,13 @@ function main() {
           }
         }
         emit(
+          event,
           "No codebase map found in this repo. Run the `z-map` skill (`generate`) to create an onboarding map at .z/map/map.md that this hook keeps flagging for staleness and the skill refreshes on demand. Set CODEMAP_HINT=off to silence this.",
         );
         return;
       }
     }
-    emit(null);
+    emit(event, null);
     return;
   }
 
@@ -121,63 +200,28 @@ function main() {
     ? m[1].trim()
     : "(orientation markers not found in .z/map/map.md — read the file directly)";
 
-  // --- staleness verdict ---
   let staleness;
-  const builtSha = meta.built_against_sha;
-  if (!builtSha) {
-    staleness = "Map has no recorded build SHA — run `z-map refresh`.";
-  } else {
-    try {
-      const head = git(root, ["rev-parse", "HEAD"]);
-      if (head === builtSha) {
-        staleness = "Map is up to date with HEAD.";
-      } else {
-        let known = true;
-        try {
-          git(root, ["cat-file", "-e", `${builtSha}^{commit}`]);
-        } catch {
-          known = false;
-        }
-        if (!known) {
-          staleness = `Map was built against ${builtSha.slice(0, 8)}, no longer in history (rebased?) — run \`z-map refresh\`.`;
-        } else {
-          let commits = "?";
-          let files = "?";
-          try {
-            commits = git(root, ["rev-list", "--count", `${builtSha}..HEAD`]);
-          } catch {
-            /* ignore */
-          }
-          try {
-            files = String(
-              git(root, ["diff", "--name-only", `${builtSha}..HEAD`])
-                .split("\n")
-                .filter(Boolean).length,
-            );
-          } catch {
-            /* ignore */
-          }
-          staleness = `Map is ${commits} commit(s) / ${files} file(s) behind HEAD (built @ ${builtSha.slice(0, 8)}) — run \`z-map refresh\`.`;
-        }
-      }
-    } catch {
-      staleness = "Git unavailable — map staleness unknown.";
-    }
+  try {
+    staleness = stalenessVerdict(root, meta);
+  } catch {
+    staleness = "Map staleness unknown.";
   }
 
   const ctx = [
-    "## Codebase map (auto-injected by z-map)",
+    isSubagent
+      ? "## Codebase map (auto-injected by z-map for this subagent)"
+      : "## Codebase map (auto-injected by z-map)",
     "",
     orientation,
     "",
-    `> ${staleness} Full map: .z/map/map.md — read it for the module tree, diagrams, and key-files index before grepping the whole tree.`,
+    `> ${staleness} Full map: .z/map/map.md — read its key-files index, external contracts and conventions before grepping the whole tree.`,
   ].join("\n");
 
-  emit(ctx);
+  emit(event, ctx);
 }
 
 try {
   main();
 } catch {
-  emit(null);
+  emit(undefined, null);
 }

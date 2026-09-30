@@ -6,8 +6,8 @@ Zack's personal collection of custom skills for Claude, distributed as a Claude 
 
 - **z-learn** — turns coding sessions into guided learning. Builds, refactors, and debugs incrementally, narrating both _what the code does_ and the _thought process_ behind it, pausing at real decision points, and calibrated to what you already know.
 - **z-build** — a streamlined `explore → plan → implement → test → review` loop, built to do what gsd/superpowers do for a coding task without their subagent pipelines and on-disk artifacts. Leans on Opus's native planning and in-context execution. Keeps the disciplines an LLM skips — explore before committing (with a live **visual companion** for mockups/comparisons), align before coding, test-first for risky code, systematic debugging, fresh-eyes review, an optional post-green simplify pass — and leaves the commit to you.
-- **z-map** — maintains a compact, in-repo, version-controlled map of a codebase (orientation, module tree, Mermaid diagrams, key-files index, conventions) so a cold session gets oriented in seconds and jumps to the right `file:line` instead of re-reading the tree. A SessionStart hook injects the orientation and flags staleness; the skill generates the map and refreshes it incrementally as the code changes.
-- **z-log** — a lean, in-repo episodic memory: a curated log of _decisions, gotchas, and open threads_ so the next session recalls the _why_, not just the what. Model-authored on demand (no noisy per-tool capture); a SessionStart hook injects the bounded digest and nudges when work has happened since the last entry.
+- **z-map** — maintains a compact, in-repo, version-controlled map of a codebase (orientation, module tree, Mermaid diagrams, key-files index, external contracts, conventions) so a cold session gets oriented in seconds and jumps to the right file and symbol instead of re-reading the tree. A hook injects the orientation into every session and subagent and flags staleness against the default branch; the skill generates the map, refreshes it incrementally, and takes small direct edits for durable facts.
+- **z-log** — a lean, in-repo episodic memory: a curated log of _decisions, gotchas, and open threads_ so the next session recalls the _why_, not just the what. Model-authored on demand (no noisy per-tool capture); a hook injects the bounded digest into every session (and its gotchas into every subagent) and flags it when it outgrows its budget. Durable facts graduate to z-map as they're found, and curating doubles as the map's maintenance pass.
 - **z-commit** — turns a finished working tree into clean, atomic, reviewable commits. Surveys the diff, proposes commit groupings and messages, flags anything that shouldn't ship, and hands you ready-to-run commands. Never stages or commits for you — the commit is always yours.
 - **z-upgrade** — a disciplined dependency/framework/runtime upgrade. Reads the migration notes first, inventories usage, upgrades one layer at a time, verifies _runtime behavior_ (not just compilation), and records deferred deprecations. Never blindly bumps versions.
 - **z-subagent** — delegation discipline for subagents. Decides when to delegate vs. read directly, then dispatches with a real contract — one goal, a scope fence, an exact return shape, a hard size cap, `file:line` grounding with confidence tags — so agents return compact, verifiable results instead of dumps.
@@ -64,7 +64,7 @@ skills/                                     repo root = the marketplace
     │       └── z-simplify/SKILL.md       post-green quality pass: reuse / dead weight / altitude
     ├── z-map/                        in-repo, version-controlled codebase map
     │   ├── .claude-plugin/plugin.json
-    │   ├── hooks/session-start.mjs          injects orientation + staleness at session start
+    │   ├── hooks/session-start.mjs          injects orientation + staleness at session/subagent start
     │   └── skills/
     │       └── z-map/
     │           ├── SKILL.md                 status → generate / refresh loop
@@ -72,7 +72,7 @@ skills/                                     repo root = the marketplace
     │           └── refreshing.md            incremental update proportional to the diff
     ├── z-log/                             in-repo episodic memory: decisions/gotchas/threads
     │   ├── .claude-plugin/plugin.json
-    │   ├── hooks/session-start.mjs          injects the bounded digest + freshness nudge
+    │   ├── hooks/session-start.mjs          injects the digest (session) / gotchas (subagent) + budget check
     │   └── skills/
     │       └── z-log/
     │           ├── SKILL.md                 when/what to capture; the loop
@@ -106,4 +106,4 @@ skills/                                     repo root = the marketplace
 
 - **Name with the `z-` prefix** (`z-build`, `z-map`, …) so everything installs as `z-<thing>@z-skills`.
 - **Persistent in-repo state goes under `.z/<skill>/`** — one folder per skill, so every z-skill's artifacts live together and the repo root stays clean. Keep the human-readable doc and the machine state as siblings there. Today: `z-map` → `.z/map/` (`map.md` + `meta.json`); `z-log` → `.z/log/` (`log.md` + `meta.json` + `archive.md`). A new stateful skill just claims its own `.z/<skill>/`.
-- **Inject that state with a SessionStart hook** in `plugins/<plugin>/hooks/` (see `z-map`/`z-log`). Reference scripts via `${CLAUDE_PLUGIN_ROOT}` so a plugin rename stays safe.
+- **Inject that state with a SessionStart hook** in `plugins/<plugin>/hooks/` (see `z-map`/`z-log`), and register the same script for SubagentStart if subagents need it — SessionStart context never reaches them. Reference scripts via `${CLAUDE_PLUGIN_ROOT}` so a plugin rename stays safe.
